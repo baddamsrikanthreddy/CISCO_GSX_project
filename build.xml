@@ -1,0 +1,80 @@
+<project name="dreamforce" basedir="." default="main">
+	<property file="build.properties"/>
+	<property name="src.dir"     value="src"/>
+	<property name="build.dir"   value="build"/>
+	<property name="lib.home"     value="lib"/>
+	<property name="jar.dir"   value="${build.dir}/jar"/>
+	<property name="classes.dir" value="${build.dir}/classes"/>
+	<property name="src.resources.dir" value="${src.dir}/resources"/>
+	<property name="classes.resources.dir" value="${classes.dir}/resources"/>
+	<property name="classes.lib.dir" value="${classes.dir}/lib"/>
+	<property name="test-output.dir" value="test-output"/>
+	<property name="reports.dir" value="reports"/>
+
+	<target name="clean" >
+		<delete dir="${build.dir}"/>
+		<delete dir="${jar.dir}"/>
+		
+	</target>
+	
+	<target name="cleanTestOutput" depends="check,clean" if="deldir">
+			<delete dir="${test-output.dir}"/>
+	</target>
+	
+	<target name="check">
+	  <condition property="deldir">
+	    <available file="${test-output.dir}" type="dir"/>
+	  </condition>
+	 </target>
+
+	<path id="classpath">
+		<pathelement location="${classes.dir}"/>
+		<fileset dir="${lib.home}" includes="**/*.jar"/>
+	</path>
+
+	<target name="compile">
+		<mkdir dir="${classes.dir}" />
+		<javac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="classpath" />
+
+		<mkdir dir="${classes.resources.dir}" />
+
+		<copy todir="${classes.resources.dir}" overwrite="true">
+			<fileset dir="${src.resources.dir}">
+				<include name="**/*.properties" />
+			</fileset>
+		</copy>
+	</target>
+
+	<!--
+	
+	<copy todir="${classes.lib.dir}">
+			<fileset dir="${lib.home}" includes="*.jar" />
+		</copy>
+		
+	<target name="run" depends="compile">
+		<echo>${classes.dir}</echo>
+		<java classpath="${classes.dir}" classname="${main-class}" classpathref="classpath">
+			<arg value="${args}"/>
+		</java>
+
+	</target>
+	-->
+	<target name="jar" depends="cleanTestOutput,compile">
+		<mkdir dir="${jar.dir}"/>
+		<jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
+			<zipgroupfileset dir="${lib.home}" />
+			
+			<manifest>
+				<attribute name="Main-Class" value="${mainclass}"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="run" depends="jar">
+		<java jar="${jar.dir}/${ant.project.name}.jar" classpath="${classes.dir}" classpathref="classpath" fork="true">
+		</java>
+	</target>
+	
+	<target name="main" depends="clean,run"/>
+
+</project>
